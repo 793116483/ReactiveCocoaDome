@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F28BD7551F4572A20053A650 /* ReactiveObjC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F28BD7541F4572A20053A650 /* ReactiveObjC.framework */; };
 		F2CF031C1F454BEE00681B81 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = F2CF031B1F454BEE00681B81 /* main.m */; };
 		F2CF031F1F454BEE00681B81 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = F2CF031E1F454BEE00681B81 /* AppDelegate.m */; };
 		F2CF03221F454BEE00681B81 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = F2CF03211F454BEE00681B81 /* ViewController.m */; };
@@ -36,6 +37,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		F28BD7541F4572A20053A650 /* ReactiveObjC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ReactiveObjC.framework; path = Carthage/Build/iOS/ReactiveObjC.framework; sourceTree = "<group>"; };
 		F2CF03171F454BEE00681B81 /* ReactiveCocoaDome.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ReactiveCocoaDome.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F2CF031B1F454BEE00681B81 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		F2CF031D1F454BEE00681B81 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -60,6 +62,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F28BD7551F4572A20053A650 /* ReactiveObjC.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -80,6 +83,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		F28BD7531F4572A20053A650 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				F28BD7541F4572A20053A650 /* ReactiveObjC.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		F2CF030E1F454BEE00681B81 = {
 			isa = PBXGroup;
 			children = (
@@ -87,6 +98,7 @@
 				F2CF03361F454BEE00681B81 /* ReactiveCocoaDomeTests */,
 				F2CF03411F454BEE00681B81 /* ReactiveCocoaDomeUITests */,
 				F2CF03181F454BEE00681B81 /* Products */,
+				F28BD7531F4572A20053A650 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -428,6 +440,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Carthage/Build/iOS",
+				);
 				INFOPLIST_FILE = ReactiveCocoaDome/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.yiniu.app.ReactiveCocoaDome;
@@ -439,6 +455,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Carthage/Build/iOS",
+				);
 				INFOPLIST_FILE = ReactiveCocoaDome/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.yiniu.app.ReactiveCocoaDome;
@@ -511,6 +531,7 @@
 				F2CF03491F454BEE00681B81 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		F2CF034A1F454BEE00681B81 /* Build configuration list for PBXNativeTarget "ReactiveCocoaDomeTests" */ = {
 			isa = XCConfigurationList;
@@ -519,6 +540,7 @@
 				F2CF034C1F454BEE00681B81 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		F2CF034D1F454BEE00681B81 /* Build configuration list for PBXNativeTarget "ReactiveCocoaDomeUITests" */ = {
 			isa = XCConfigurationList;
@@ -527,6 +549,7 @@
 				F2CF034F1F454BEE00681B81 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 
