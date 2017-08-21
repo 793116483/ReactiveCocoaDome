@@ -20,23 +20,25 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
-//    // 1.RACSignal 先订阅 再发送
+//    // 1.RACSignal 先订阅 再发送 (主线程中执行)
 //    self.RACSignalDome();
     
-//    // 2.RACSubject 先订阅 再发送
+//    // 2.RACSubject 先订阅 再发送 (主线程中执行)
 //    self.RACSubjectDome();
     
-//    // 价值所在：先发送，再订阅 (不管怎么延时，订阅的 block 都可以接收到发送过的信号)
+//    // 价值所在：先发送，再订阅 (不管怎么延时，订阅的 block 都可以接收到发送过的信号) (主线程中执行)
 //    self.RACReplaySubjectDome();
  
-    
+    // RACTuple 元组使用例子 (异步执行 block 内容，开启新的线程)
+    self.NSArrayAndNSDictionaryRACTupleDome();
+   
 }
 
 
 
 
 /**
-    1、RACSignal : 先订阅 再发送
+    1、RACSignal : 先订阅 再发送（主线程中执行）
  */
 -(void (^)(void))RACSignalDome
 {
@@ -82,7 +84,7 @@
 
 
 /**
-    2、RACSubject：先订阅 再发送
+    2、RACSubject：先订阅 再发送 （主线程中执行）
              价值：可以用在代理上，参数就可以可区分调用哪一块的代码
  */
 -(void (^)(void))RACSubjectDome
@@ -113,7 +115,7 @@
 
 
 /**
-    3、先发送 再订阅 （这个比较 实用 ，可以在不知道什么时候发送信号的情况下准确的接收到信号）
+    3、先发送 再订阅 （这个比较 实用 ，可以在不知道什么时候发送信号的情况下准确的接收到信号）（主线程中执行）
  */
 -(void(^)(void))RACReplaySubjectDome
 {
@@ -125,6 +127,7 @@
         // 发送
         [replaySubject sendNext:@"RACReplaySubjectDome 先发送 1"];
         [replaySubject sendNext:@"RACReplaySubjectDome 先发送 2"];
+        [replaySubject sendCompleted];
         
         // 订阅
         [replaySubject subscribeNext:^(id  _Nullable x) {
@@ -143,6 +146,46 @@
             }];
         });
         
+    };
+}
+
+
+/**
+    RACTuple ：将数组 或 字典等所有的内容可以用 元组 来列出（异步执行，开了新的线程）
+ */
+-(void(^)(void))NSArrayAndNSDictionaryRACTupleDome
+{
+    return ^{
+        
+        // 1.把值包装成 元组
+        RACTuple * tuple = RACTuplePack(@"abc",@"def",@"ghj");
+    
+        NSLog(@"RACTuple 元组包装: pack = %@ ",tuple);
+        
+        
+        // 2.NSDictionary 元组 , 将字典里面的每一对 keyValue 列举出来(开了一个新的线程，异步列举)
+        NSDictionary * dicTuple = @{@"name":@"Jakey" , @"age":@18 , @"student":@(YES)};
+        
+        [dicTuple.rac_sequence.signal subscribeNext:^(id  _Nullable x) {
+           
+            NSString * key = [(RACTuple *)x objectAtIndex:0];
+            id         value = [(RACTuple *)x objectAtIndex:1];
+            NSLog(@"NSDictionary 元组使用 = %@ , key = %@ , value = %@ , thread = %@",x,key,value,[NSThread currentThread]);
+        }completed:^{
+            NSLog(@"NSDictionary 元组使用 completed , thread = %@",[NSThread currentThread]);
+        } ];
+        
+        
+        // 3.NSArray 元组 ，将数组内的所有数据列举出来 （异步列举）
+        NSArray * array = @[@"klr",@"nop",@"rst"];
+        [array.rac_sequence.signal subscribeNext:^(id  _Nullable x) {
+            
+            NSLog(@"NSArray 元组 x = %@ , thread = %@",x,[NSThread currentThread]);
+        }error:^(NSError * _Nullable error) {
+            NSLog(@"NSArray 元组 error = %@",error);
+        } completed:^{
+            NSLog(@"NSArray 元组 completed ,thread = %@",[NSThread currentThread]);
+        }];
     };
 }
 
