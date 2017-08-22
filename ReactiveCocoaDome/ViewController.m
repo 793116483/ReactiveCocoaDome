@@ -26,12 +26,14 @@
 //    // 2.RACSubject 先订阅 再发送 (主线程中执行)
 //    self.RACSubjectDome();
     
-//    // 价值所在：先发送，再订阅 (不管怎么延时，订阅的 block 都可以接收到发送过的信号) (主线程中执行)
+//    // 3.价值所在：先发送，再订阅 (不管怎么延时，订阅的 block 都可以接收到发送过的信号) (主线程中执行)
 //    self.RACReplaySubjectDome();
  
-    // RACTuple 元组使用例子 (异步执行 block 内容，开启新的线程)
-    self.NSArrayAndNSDictionaryRACTupleDome();
+//    // 4.RACTuple 元组使用例子 (异步执行 block 内容，开启新的线程)
+//    self.NSArrayAndNSDictionaryRACTupleDome();
    
+    // 5.RACMulticastConnectionDome 广播连接
+    self.RACMulticastConnectionDome();
 }
 
 
@@ -61,7 +63,7 @@
             }];
         }];
         
-        
+        NSLog(@"确定先后顺序");
         // 订阅
         // 当创建 signal 时的 subscriber 发出信号改变 [subscriber sendNext:@"中国人民"] 就会调用 下面的 订阅block , 当前最新版本与以往的不同，现在都是在主线程中执行 block
         
@@ -79,6 +81,10 @@
             
         }];
 
+        
+        [signal subscribeNext:^(id  _Nullable x) {
+            NSLog(@"subscribeNext x = %@",x);
+        }];
     };
 }
 
@@ -151,7 +157,7 @@
 
 
 /**
-    RACTuple ：将数组 或 字典等所有的内容可以用 元组 来列出（异步执行，开了新的线程）
+    4、RACTuple ：将数组 或 字典等所有的内容可以用 元组 来列出（异步执行，开了新的线程）
  */
 -(void(^)(void))NSArrayAndNSDictionaryRACTupleDome
 {
@@ -200,6 +206,76 @@
 }
 
 
+/**
+    5、RACMulticastConnection ：广播连接(将 RACSignal 转成 RACMulticastConnection , block 在 main 主线程执行)
+ */
+-(void(^)(void))RACMulticastConnectionDome
+{
+    return ^{
+    
+        // 不能解决 _view ( === self->_view , 这样就无法解决强引用的问题)
+        // __weak typeof(self) weakSelf = self ;
+        
+        // 无论哪种用法都可以解决强引用问题
+        @weakify(self);
+        
+        RACSignal * signal = [RACSignal createSignal:^RACDisposable * _Nullable(id<RACSubscriber>  _Nonnull subscriber) {
+            
+            // @weakify(self) 配套使用
+            @strongify(self);
+            
+            NSLog(@"connection createSignal , thread = %@",[NSThread currentThread]);
+            
+            [self loadDataFromNetwork:^(NSArray *dataArr) {
+               
+                NSLog(@"loadDataFromNetwork block dataArr = %@ , thread = %@",dataArr , [NSThread currentThread]);
+                
+                // 发送信号
+                [subscriber sendNext:dataArr];
+                [subscriber sendCompleted];
+            }];
+            
+            return [RACDisposable disposableWithBlock:^{
+               
+                NSLog(@"connection disposableWithBlock ，thread = %@",[NSThread currentThread]);
+            }];
+        }];
+        
+//        // 直接订阅
+//        [signal subscribeNext:^(id  _Nullable x) {
+//           
+//            NSLog(@"subscribeNext x = %@ , thread = %@",x,[NSThread currentThread]);
+//            
+//        }];
+        
+        
+        // 将 signal 转化成 connection
+        RACMulticastConnection * connection = [signal publish];
+        
+        // 订阅信号
+        // RACSubject:RACSubscriber
+        [connection.signal subscribeNext:^(id  _Nullable x) {
+           
+            NSLog(@"commection x = %@ , thread = %@",x,[NSThread currentThread]);
+        }];
+        [connection.signal subscribeNext:^(id  _Nullable x) {
+            
+            NSLog(@"commection2 x = %@ , thread = %@",x,[NSThread currentThread]);
+        }];
+        
+        // 连接
+        // RACSubject 订阅 RACSignal
+        [connection connect];
+        
+    };
+}
+// 网络数据加载方法
+-(void)loadDataFromNetwork:(void(^)(NSArray * dataArr))resultBlock
+{
+    NSLog(@"loadDataFromNetwork selector thread = %@",[NSThread currentThread]);
+    
+    resultBlock(@[@"temp = 1" , @"temp = 2" , @"temp = 3"]);
+}
 
 
 
