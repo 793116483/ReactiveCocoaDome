@@ -186,14 +186,21 @@
         } completed:^{
             NSLog(@"NSArray 元组 completed ,thread = %@",[NSThread currentThread]);
         }];
+        
+        
+        // 4.异步列出 数组 或 字典 内容
+        NSArray * mapArray = [[array.rac_sequence map:^id _Nullable(id  _Nullable value) {
+            
+            NSLog(@"value = %@ , thread = %@",value,[NSThread currentThread]);
+            
+            return [value stringByAppendingString:@" temp"];
+        }] array] ;
+        NSLog(@"===== %@", mapArray);
     };
 }
 
 
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
-}
+
 
 
 @end
