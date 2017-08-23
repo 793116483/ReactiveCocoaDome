@@ -36,7 +36,11 @@
 //    self.RACMulticastConnectionDome();
     
 //    // 6. RACCommand：处理事件的操作.(主线程中执行)
-    self.RACCommandDome();
+//    self.RACCommandDome();
+    
+    // RAC NSObject 分类中 rac_liftSelector... 方法的使用
+    // 功能：等待一个或多个 RACSingal 发出信号完成后 ，就会调用指定的对象方法，把信号值传给指定的方法
+    self.rac_liftSelectorDome();
     
 }
 
@@ -347,7 +351,37 @@
 }
 
 
-
+-(void(^)(void))rac_liftSelectorDome
+{
+    return ^{
+    
+        RACSignal * signalOne = [RACSignal createSignal:^RACDisposable * _Nullable(id<RACSubscriber>  _Nonnull subscriber) {
+           
+            // 现在想发出信号了
+            [subscriber sendNext:@"网络请求数据 1"];
+            
+            // 不需要释放操作
+            return nil ;
+        }];
+        
+        RACSignal * signalTwo = [RACSignal createSignal:^RACDisposable * _Nullable(id<RACSubscriber>  _Nonnull subscriber) {
+            
+            // 现在想发出信号了
+            [subscriber sendNext:@"网络请求数据 2"];
+            
+            // 不需要释放操作
+            return nil ;
+        }];
+        
+        [self rac_liftSelector:@selector(updateUIWithSignalOneMessage:signalTwoMessage:) withSignalsFromArray:@[signalOne , signalTwo]];
+    };
+}
+// 当据有数据都拿到手后更新UI , 传的数据就是 signalOne 和 signalTwo 发出来的信号数据 ，(所以当前设计的接收方法 也必需要有两个参数，发出的信号按顺序 传参)
+// 假如当前对象方法只设计 传一个参数，那么就会导致崩溃
+-(void)updateUIWithSignalOneMessage:(id)signalOneMessage signalTwoMessage:(id)signalTwoMessage
+{
+    NSLog(@"signalOneMessage = %@ , signalTwoMessage = %@",signalOneMessage,signalTwoMessage);
+}
 
 
 @end
