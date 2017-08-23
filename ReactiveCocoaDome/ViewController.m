@@ -32,16 +32,18 @@
 //    // 4.RACTuple 元组使用例子 (异步执行 block 内容，开启新的线程)
 //    self.NSArrayAndNSDictionaryRACTupleDome();
    
-//    // 5.RACMulticastConnectionDome 广播连接
+//    // 5.RACMulticastConnectionDome 广播连接 (主线程中执行)
 //    self.RACMulticastConnectionDome();
     
 //    // 6. RACCommand：处理事件的操作.(主线程中执行)
 //    self.RACCommandDome();
     
-    // RAC NSObject 分类中 rac_liftSelector... 方法的使用
-    // 功能：等待一个或多个 RACSingal 发出信号完成后 ，就会调用指定的对象方法，把信号值传给指定的方法
-    self.rac_liftSelectorDome();
+//    // 7. RAC NSObject 分类中 rac_liftSelector... 方法的使用（主线程中执行）
+//    //    功能：等待一个或多个 RACSingal 发出信号完成后 ，就会调用指定的对象方法，把信号值传给指定的方法
+//    self.rac_liftSelectorDome();
     
+    //
+    self.RAC_Notification_Dome();
 }
 
 
@@ -344,13 +346,16 @@
         
         // 只执行一次 (1)
         [command execute:@"execute"];
-        
+      
 //        [command execute:@"execute"];
 
     };
 }
 
 
+/**
+    7、NSObject 分类中 rac_liftSelector... 方法的使用(即等待成所有的 RACSignal 对象发送完信号再执行方法) (主程中执行)
+ */
 -(void(^)(void))rac_liftSelectorDome
 {
     return ^{
@@ -380,8 +385,32 @@
 // 假如当前对象方法只设计 传一个参数，那么就会导致崩溃
 -(void)updateUIWithSignalOneMessage:(id)signalOneMessage signalTwoMessage:(id)signalTwoMessage
 {
-    NSLog(@"signalOneMessage = %@ , signalTwoMessage = %@",signalOneMessage,signalTwoMessage);
+    NSLog(@"signalOneMessage = %@ , signalTwoMessage = %@ , thread = %@",signalOneMessage,signalTwoMessage,[NSThread currentThread]);
 }
+
+
+/**
+   NSNotificationCenter : 使用了 RAC 把监听通知的方法改成了 block 形势
+ */
+-(void(^)(void))RAC_Notification_Dome
+{
+    return ^{
+        
+        // 监听通知
+        [[[NSNotificationCenter defaultCenter] rac_addObserverForName:UIKeyboardDidHideNotification object:nil] subscribeNext:^(NSNotification * _Nullable x) {
+            NSLog(@"NSNotification 1 x = %@",x.userInfo);
+        }];
+        
+        [[[NSNotificationCenter defaultCenter] rac_addObserverForName:UIKeyboardDidHideNotification object:nil] subscribeNext:^(NSNotification * _Nullable x) {
+            NSLog(@"NSNotification 2 x = %@",x.userInfo);
+        }];
+        
+        // 发出通知
+        [[NSNotificationCenter defaultCenter] postNotificationName:UIKeyboardDidHideNotification object:nil];
+    
+    };
+}
+
 
 
 @end
