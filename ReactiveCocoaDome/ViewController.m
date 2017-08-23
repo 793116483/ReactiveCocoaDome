@@ -32,10 +32,10 @@
 //    // 4.RACTuple 元组使用例子 (异步执行 block 内容，开启新的线程)
 //    self.NSArrayAndNSDictionaryRACTupleDome();
    
-    // 5.RACMulticastConnectionDome 广播连接
+//    // 5.RACMulticastConnectionDome 广播连接
 //    self.RACMulticastConnectionDome();
     
-    // 6. RACCommand：处理事件的操作.(主线程中执行)
+//    // 6. RACCommand：处理事件的操作.(主线程中执行)
     self.RACCommandDome();
     
 }
@@ -289,23 +289,22 @@
              (2.1) switchToLatest 最新发出来信号的 RACSignal 类型
              (2.2) 能过 (2.1)的诠释，那么只要用 switchToLatest subscribeNext: 订阅，就可以接收到发出来的信号
         (3) 下面是执行的顺序，用 (index)表示
-        (4) execute:(id)input ; 该对象方法必须被调用，所有的 block 执行操作的 入口
+        (4) execute:(id)input ; 该对象方法必须被调用(调用次数只有一次有效)才会执行一些相关操作，所有的 block 执行操作的 入口
  */
 -(void(^)(void))RACCommandDome
 {
     return ^{
     
         RACCommand * command = [[RACCommand alloc] initWithSignalBlock:^RACSignal * _Nonnull(id  _Nullable input) {
-           // (3)
-            NSLog(@"init RACCommand block 被执行 initWithSignalBlock , thread = %@",[NSThread currentThread]);
-
+           // input 即是执行 execute:(id)input; 传进来的值   (3)
+            NSLog(@"init RACCommand block 被执行 initWithSignalBlock input = %@ , thread = %@",input,[NSThread currentThread]);
             
             return [RACSignal createSignal:^RACDisposable * _Nullable(id<RACSubscriber>  _Nonnull subscriber) {
                // (6)
                 NSLog(@"内部创建的信号block 被执行 createSignal , thread = %@",[NSThread currentThread]);
                 
                 // 发送信号
-                [subscriber sendNext:@"create Signal for somthing"];
+                [subscriber sendNext:@"create Signal for somthing %@"];
                 [subscriber sendCompleted];
                 
                 return [RACDisposable disposableWithBlock:^{
@@ -339,8 +338,11 @@
         }];
 
         
-        // 执行 (1)
+        // 只执行一次 (1)
         [command execute:@"execute"];
+        
+//        [command execute:@"execute"];
+
     };
 }
 
