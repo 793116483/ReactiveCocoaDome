@@ -33,7 +33,11 @@
 //    self.NSArrayAndNSDictionaryRACTupleDome();
    
     // 5.RACMulticastConnectionDome 广播连接
-    self.RACMulticastConnectionDome();
+//    self.RACMulticastConnectionDome();
+    
+    // 6. RACCommand：处理事件的操作.(主线程中执行)
+    self.RACCommandDome();
+    
 }
 
 
@@ -276,6 +280,71 @@
     
     resultBlock(@[@"temp = 1" , @"temp = 2" , @"temp = 3"]);
 }
+
+
+/**
+    6、RACCommand：处理事件的操作.(主线程中执行)
+        (1) RACCommand : 内部必须返回 RACSignal
+        (2) executionSignals : 信号外的信号
+             (2.1) switchToLatest 最新发出来信号的 RACSignal 类型
+             (2.2) 能过 (2.1)的诠释，那么只要用 switchToLatest subscribeNext: 订阅，就可以接收到发出来的信号
+        (3) 下面是执行的顺序，用 (index)表示
+        (4) execute:(id)input ; 该对象方法必须被调用，所有的 block 执行操作的 入口
+ */
+-(void(^)(void))RACCommandDome
+{
+    return ^{
+    
+        RACCommand * command = [[RACCommand alloc] initWithSignalBlock:^RACSignal * _Nonnull(id  _Nullable input) {
+           // (3)
+            NSLog(@"init RACCommand block 被执行 initWithSignalBlock , thread = %@",[NSThread currentThread]);
+
+            
+            return [RACSignal createSignal:^RACDisposable * _Nullable(id<RACSubscriber>  _Nonnull subscriber) {
+               // (6)
+                NSLog(@"内部创建的信号block 被执行 createSignal , thread = %@",[NSThread currentThread]);
+                
+                // 发送信号
+                [subscriber sendNext:@"create Signal for somthing"];
+                [subscriber sendCompleted];
+                
+                return [RACDisposable disposableWithBlock:^{
+                    // 当 [subscriber sendCompleted] 调用时就会执行释放功能的 block (8)
+                    NSLog(@"内部信号被释放 disposableWithBlock , thread = %@",[NSThread currentThread]);
+                }];
+                
+            }];
+        }];
+    
+        // 订阅最新发出来信号的 signal (7)
+        [command.executionSignals.switchToLatest subscribeNext:^(id  _Nullable x) {
+            
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                NSLog(@"执行最近的 tmp signal , x = %@ , thread = %@",x,[NSThread currentThread]);
+            });
+            
+            NSLog(@"执行最近的 signal , x = %@ , thread = %@",x,[NSThread currentThread]);
+        }];
+
+        // executionSignals 这里传的 x 值类型为 RACDynamicSignal 类型对象 (5)
+        [command.executionSignals subscribeNext:^(id  _Nullable x) {
+            
+            NSLog(@"executionSignals subscribeNext x = %@ , thread = %@",x,[NSThread currentThread]);
+        }];
+        
+        // 查看将要执行，每执行完一个步聚 都会调用一次查看哪个 signal block（即 第 x 个 block  ） 将被使用 (2)(4)(9)
+        // signal 的 skip: 方法功能是跳过 skipCount 个 使用 block 的查看
+        [[[command executing] skip:0] subscribeNext:^(NSNumber * _Nullable x) {
+            NSLog(@"executing signal subscribeNext x = %@ , thread = %@",x,[NSThread currentThread]);
+        }];
+
+        
+        // 执行 (1)
+        [command execute:@"execute"];
+    };
+}
+
+
 
 
 
