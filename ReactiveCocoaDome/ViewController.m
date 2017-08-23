@@ -42,8 +42,11 @@
 //    //    功能：等待一个或多个 RACSingal 发出信号完成后 ，就会调用指定的对象方法，把信号值传给指定的方法
 //    self.rac_liftSelectorDome();
     
-    //
-    self.RAC_Notification_Dome();
+//    // 8. RAC 通知 的使用
+//    self.RAC_Notification_Dome();
+    
+    // 9. RAC UITextField 监听 text 变化(主线程)
+    self.RAC_UITextField_Dome();
 }
 
 
@@ -411,6 +414,38 @@
     };
 }
 
+
+/**
+    9、RAC UITextField 监听 text 变化
+ */
+-(void(^)(void))RAC_UITextField_Dome
+{
+    @weakify(self);
+    return ^{
+        
+        @strongify(self);
+        
+        // UITextField RAC使用
+        UITextField * textField = [[UITextField alloc] initWithFrame:CGRectMake(100, 100, 100, 50)];
+        textField.backgroundColor = [UIColor redColor];
+        [self.view addSubview:textField];
+      
+        [[textField rac_textSignal] subscribeNext:^(NSString * _Nullable x) {
+            NSLog(@"text = %@ , textField.text = %@ , thread = %@",x,textField.text,[NSThread currentThread]);
+        }];
+        
+        
+        // 绑定 lable.text 
+        UILabel * lable = [[UILabel alloc] initWithFrame:CGRectMake(100, 200, 100, 50)];
+        lable.backgroundColor = [UIColor greenColor];
+        [self.view addSubview:lable];
+
+        // 绑定 lable.text 永远等于 textField.text
+        RAC(lable,text) = textField.rac_textSignal ;
+        
+        
+    };
+}
 
 
 @end
