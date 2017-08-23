@@ -12,6 +12,8 @@
 
 @interface ViewController ()
 
+@property (nonatomic , assign) NSInteger age ;
+
 @end
 
 @implementation ViewController
@@ -45,8 +47,12 @@
 //    // 8. RAC 通知 的使用
 //    self.RAC_Notification_Dome();
     
-    // 9. RAC UITextField 监听 text 变化(主线程)
-    self.RAC_UITextField_Dome();
+//    // 9. RAC UITextField 监听 text 变化(主线程)
+//    self.RAC_UITextField_Dome();
+    
+    
+    //RAC KVO 监听属性内容变化
+    self.RAC_KVO_Dome();
 }
 
 
@@ -416,7 +422,7 @@
 
 
 /**
-    9、RAC UITextField 监听 text 变化
+    9、RAC UITextField 监听 text 变化 和 绑定 lable.text 永远等于 textField.text
  */
 -(void(^)(void))RAC_UITextField_Dome
 {
@@ -435,7 +441,7 @@
         }];
         
         
-        // 绑定 lable.text 
+        // 绑定 lable.text
         UILabel * lable = [[UILabel alloc] initWithFrame:CGRectMake(100, 200, 100, 50)];
         lable.backgroundColor = [UIColor greenColor];
         [self.view addSubview:lable];
@@ -445,6 +451,25 @@
         
         
     };
+}
+
+
+/**
+    RAC KVO 监听属性内容变化
+ */
+-(void(^)(void))RAC_KVO_Dome
+{
+    return ^{
+    
+        [RACObserve(self, age) subscribeNext:^(id  _Nullable x) {
+           
+            NSLog(@"KVO 监听到 age 内容发生变化 ，变为 %@ , thread = %@",x,[NSThread currentThread]);
+        }];
+    };
+}
+-(void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
+{
+    self.age++ ;
 }
 
 
