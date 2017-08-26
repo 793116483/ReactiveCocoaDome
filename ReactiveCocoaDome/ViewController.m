@@ -63,8 +63,11 @@
 //    self.RACReplaySubjectThenUseDome();
     
     
-    // 13、合并两个及以上 RACSignal 或 RACSignal 的子类对象，用新创建的 RACSignal 对象接收多个 RACSignal 或 RACSignal 的子类对象 发出的信号
-    self.RACSignalMergeDome();
+//    // 13、合并两个及以上 RACSignal 或 RACSignal 的子类对象，用新创建的 RACSignal 对象接收多个 RACSignal 或 RACSignal 的子类对象 发出的信号
+//    self.RACSignalMergeDome();
+    
+    // 14、使用 zipWith: 对象方法 压缩两个及以上 RACSignal 或 RACSignal 的子类对象。注意：( 1.所有 的被压缩对象 一起发送信号 才能收到; 2.解析时需要一层一层的解析 )
+    self.RACSignalZipWithDome();
 }
 
 
@@ -567,7 +570,7 @@
 
 
 /**
-    13、合并两个及以上 RACSignal 或 RACSignal 的子类对象，用新创建的 RACSignal 对象接收多个 RACSignal 或 RACSignal 的子类对象 发出的信号
+    13、合并两个及以上 RACSignal 或 RACSignal 的子类对象，用新创建的 RACSignal 对象接收多个 RACSignal 或 RACSignal 的子类对象 发出的信号 (只要求其中任一的一个被合并对象发送信号就能收到)
  */
 -(void(^)(void))RACSignalMergeDome
 {
@@ -577,7 +580,7 @@
         RACReplaySubject * subjectB = [RACReplaySubject subject];
         RACReplaySubject * subjectC = [RACReplaySubject subject];
 
-        // 发两个对象发送信号
+        // 三个对象发送信号（只需其中一个或多个发送信号时，合并的 信号对象 都可以在订阅的 block 接收到信息）
         [subjectB sendNext:@"BB"];
         [subjectA sendNext:@"AA"];
         [subjectC sendNext:@"CC"];
@@ -585,6 +588,38 @@
         // 合并两个信号对象变成一个接收信号对象 subjectD , subjectD 订阅 接收 subjectB 和 subjectA 发送的信号
         [[[subjectA merge:subjectB] merge:subjectC] subscribeNext:^(id  _Nullable x) {
             NSLog(@"%@",x);
+        }];
+        
+    };
+}
+
+
+/**
+    14、压缩两个及以上 RACSignal 或 RACSignal 的子类对象，用新创建的 RACSignal 对象同时接收多个 RACSignal 或 RACSignal 的子类对象 发出的信号 (必须所有 的被压缩对象 一起发送信号 才能收到)（注意：解析时需要一层一层的解析）
+ */
+-(void(^)(void))RACSignalZipWithDome
+{
+    return ^{
+        
+        RACReplaySubject * subjectA = [RACReplaySubject subject];
+        RACReplaySubject * subjectB = [RACReplaySubject subject];
+        RACReplaySubject * subjectC = [RACReplaySubject subject];
+        
+        // 三个对象同时发送信号，缺一不可
+        [subjectA sendNext:@"AA"];
+        [subjectB sendNext:@"BB"];
+        [subjectC sendNext:@"CC"];
+        
+        // 合并两个信号对象变成一个接收信号对象 subjectD , subjectD 订阅 接收 subjectB 和 subjectA 发送的信号
+        // x 类型为 元组 RACTwoTuple 类型：解析使用
+        [[[subjectA zipWith:subjectB] zipWith:subjectC] subscribeNext:^(id  _Nullable x) {
+            
+            // 注意：元组需要 一层一层 地解析
+            RACTupleUnpack(RACTuple * AB , NSString * C) = x ;
+            
+            RACTupleUnpack(NSString * A , NSString * B) = AB ;
+            
+            NSLog(@"A = %@ , B = %@ , C = %@",A , B , C);
         }];
         
     };
