@@ -56,11 +56,15 @@
 //    // 11、RACSignal 的 bind 绑定方法
 //    self.RACSignalBind();
     
-    /** 
-     12、RACReplaySubject 的 then: 方法用法。
-         then 功能：可以使 RACSignal 及其子类的 对象有序接收信号
-    */
-    self.RACReplaySubjectThenUseDome();
+//    /** 
+//     12、RACReplaySubject 的 then: 方法用法。
+//         then 功能：可以使 RACSignal 及其子类的 对象有序接收信号
+//    */
+//    self.RACReplaySubjectThenUseDome();
+    
+    
+    // 13、合并两个及以上 RACSignal 或 RACSignal 的子类对象，用新创建的 RACSignal 对象接收多个 RACSignal 或 RACSignal 的子类对象 发出的信号
+    self.RACSignalMergeDome();
 }
 
 
@@ -512,8 +516,8 @@
 
 
 /**
-    RACReplaySubject 的 then: 方法用法。
-    then 功能：可以使 RACSignal 及其子类的 对象有序接收信号
+    12、RACReplaySubject 的 then: 方法用法。
+        then 功能：可以使 RACSignal 及其子类的 对象有序接收信号
  */
 -(void(^)(void))RACReplaySubjectThenUseDome
 {
@@ -559,6 +563,29 @@
 }
 
 
+/**
+    13、合并两个及以上 RACSignal 或 RACSignal 的子类对象，用新创建的 RACSignal 对象接收多个 RACSignal 或 RACSignal 的子类对象 发出的信号
+ */
+-(void(^)(void))RACSignalMergeDome
+{
+    return ^{
+    
+        RACReplaySubject * subjectA = [RACReplaySubject subject];
+        RACReplaySubject * subjectB = [RACReplaySubject subject];
+        RACReplaySubject * subjectC = [RACReplaySubject subject];
+
+        // 发两个对象发送信号
+        [subjectB sendNext:@"BB"];
+        [subjectA sendNext:@"AA"];
+        [subjectC sendNext:@"CC"];
+        
+        // 合并两个信号对象变成一个接收信号对象 subjectD , subjectD 订阅 接收 subjectB 和 subjectA 发送的信号
+        [[[subjectA merge:subjectB] merge:subjectC] subscribeNext:^(id  _Nullable x) {
+            NSLog(@"%@",x);
+        }];
+        
+    };
+}
 
 
 @end
