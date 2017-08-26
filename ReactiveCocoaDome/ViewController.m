@@ -53,8 +53,14 @@
 //    // 10、RAC KVO 监听属性内容变化
 //    self.RAC_KVO_Dome();
     
-    // 11、RACSignal 的 bind 绑定方法
-    self.RACSignalBind();
+//    // 11、RACSignal 的 bind 绑定方法
+//    self.RACSignalBind();
+    
+    /** 
+     12、RACReplaySubject 的 then: 方法用法。
+         then 功能：可以使 RACSignal 及其子类的 对象有序接收信号
+    */
+    self.RACReplaySubjectThenUseDome();
 }
 
 
@@ -480,6 +486,13 @@
     
         UITextField * textField = [[UITextField alloc] init];
         
+        // bind 里面的做法：
+        // (1) 创建一个 RACSignal 对象做为 bind 方法的返值；
+        // (2) 当我们拿到该返的 RACSignal 类对象 tempSignal 去进行订阅；
+        // (3) 然后会执行创建 RACSignal 对象时的 block A ,并在里面执行 bindBlock 拿到 返回的 block (B返回值为 RACSignal 对象)；
+        // (4) 再执行 block B 就拿到 RACReturnSignal 对象；
+        // (5) RACReturnSignal 对象 进行订阅,然后在该订阅 block 里面拿到 value 值;
+        // (6) tempSignal 的 subscriber 订阅者 发送信号值 value , 最后在外面 tempSignal 对象的订阅就接收到信息了。
         [[textField.rac_textSignal bind:^RACSignalBindBlock _Nonnull{
            
             NSLog(@"bind block");
@@ -494,6 +507,54 @@
         }] subscribeNext:^(id  _Nullable x) {
             NSLog(@"signal subscribeNext x = %@",x);
         }];
+    };
+}
+
+
+/**
+    RACReplaySubject 的 then: 方法用法。
+    then 功能：可以使 RACSignal 及其子类的 对象有序接收信号
+ */
+-(void(^)(void))RACReplaySubjectThenUseDome
+{
+    return ^{
+    
+        // 在这里尽量使用 RACReplaySubject 类 ，因为 RACReplaySubject 可以先发送信号，订阅代码可以放在之后写。
+        // 如果 使用 RACSignal 或 RACSubject ，那么必须要等这些对象订阅完后，发送的信号才能接收的到
+        RACReplaySubject * subjectA = [RACReplaySubject subject];
+
+        // 这就是好处,先发送
+        [subjectA sendNext:@"AA"];
+        // 必须要调用这个方法才会来到 then 后的 block
+        [subjectA sendCompleted];
+        
+        // 按指定的顺序接收到信号
+        RACSignal * resultSiganl =
+        
+        [[[subjectA then:^RACSignal * _Nonnull{
+            
+            // 当 subjectA 发送信号完成后 才执行 当前的 block
+            RACReplaySubject * subjectB = [RACReplaySubject subject];
+            
+            // 可以单独调用发送信号完成的方法就可以接着执行下一个 then 
+            [subjectB sendCompleted];
+            
+            return subjectB ;
+            
+        }] then:^RACSignal * _Nonnull{
+            
+            // 当 subjectB 发送信号完成后 才执行 当前的 block
+            RACReplaySubject * subjectC = [RACReplaySubject subject];
+            
+            // subjectC 发送信号
+            [subjectC sendNext:@"CC"];
+            
+            return subjectC ;
+            
+        }] subscribeNext:^(id  _Nullable x) { // 这个就 "相当于" 订阅了 subjectC 对象(但真正的对象则不是 subjectC 对象) ，x = @"CC"
+            NSLog(@"RACReplaySubject C x = %@",x);
+        }];
+        
     };
 }
 
