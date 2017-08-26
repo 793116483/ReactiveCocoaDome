@@ -66,8 +66,11 @@
 //    // 13、合并两个及以上 RACSignal 或 RACSignal 的子类对象，用新创建的 RACSignal 对象接收多个 RACSignal 或 RACSignal 的子类对象 发出的信号
 //    self.RACSignalMergeDome();
     
-    // 14、使用 zipWith: 对象方法 压缩两个及以上 RACSignal 或 RACSignal 的子类对象。注意：( 1.所有 的被压缩对象 一起发送信号 才能收到; 2.解析时需要一层一层的解析 )
-    self.RACSignalZipWithDome();
+//    // 14、使用 zipWith: 对象方法 压缩两个及以上 RACSignal 或 RACSignal 的子类对象。注意：( 1.所有 的被压缩对象 一起发送信号 才能收到; 2.解析时需要一层一层的解析 )
+//    self.RACSignalZipWithDome();
+    
+    // 15、合并两个及以上 RACSignal 或 RACSignal 的子类对象，用新创建的 RACSignal 对象 同时接收多个 RACSignal 或 RACSignal 的子类对象 发出的信号 (任意一个 被合并的对象 发送的信号 都能收到)（注意：解析时需要一层一层的解析）
+    self.RACSignalCombineLatestWithDome();
 }
 
 
@@ -622,6 +625,50 @@
             NSLog(@"A = %@ , B = %@ , C = %@",A , B , C);
         }];
         
+    };
+}
+
+
+/**
+    15、合并两个及以上 RACSignal 或 RACSignal 的子类对象，用新创建的 RACSignal 对象 同时接收多个 RACSignal 或 RACSignal 的子类对象 发出的信号 (任意一个 被合并的对象 发送的信号 都能收到)（注意：解析时需要一层一层的解析）
+ */
+-(void(^)(void))RACSignalCombineLatestWithDome
+{
+    return ^{
+        
+        RACReplaySubject * subjectA = [RACReplaySubject subject];
+        RACReplaySubject * subjectB = [RACReplaySubject subject];
+        RACReplaySubject * subjectC = [RACReplaySubject subject];
+        
+        // 三个对象同时发送信号，缺一不可
+        [subjectA sendNext:@"AA"];
+        [subjectB sendNext:@"BB"];
+        [subjectC sendNext:@"CC"];
+        
+        // 1.合并三个信号对象变成一个接收信号对象 subjectD , subjectD 订阅 接收 subjectB 和 subjectA 发送的信号
+        // x 类型为 元组 RACTwoTuple 类型：解析使用
+        [[[subjectA combineLatestWith:subjectB] combineLatestWith:subjectC] subscribeNext:^(id  _Nullable x) {
+            
+            // 注意：元组需要 一层一层 地解析
+            RACTupleUnpack(RACTuple * AB , NSString * C) = x ;
+            
+            RACTupleUnpack(NSString * A , NSString * B) = AB ;
+            
+            NSLog(@"A = %@ , B = %@ , C = %@",A , B , C);
+        }];
+        
+        
+        // 2.也可以把那些信号传的参数聚合成一个值
+        //   遵守 NSFastEnumeration 协议的类都可成为数组
+        [[RACSignal combineLatest:@[subjectB,subjectA,subjectC] reduce:^id (NSString * signalA,NSString * signalB,NSString * signalC){
+            
+            // 把这 三个中任意 一个发出的信号值 聚合成一个值 NSString 类型
+            
+            return [NSString stringWithFormat:@"A = %@ , B = %@ , C = %@",signalA , signalB , signalC];
+            
+        }] subscribeNext:^(id  _Nullable x) {
+            NSLog(@"聚合后三个值变成一个 NSString 类型的值： %@",x);
+        }];
     };
 }
 
