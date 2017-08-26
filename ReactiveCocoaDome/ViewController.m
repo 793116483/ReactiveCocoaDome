@@ -196,7 +196,10 @@
         
         // 1.把值包装成 元组
         RACTuple * tuple = RACTuplePack(@"abc",@"def",@"ghj");
-    
+        
+//        // 解析元组
+//        RACTupleUnpack(NSString * a , NSString * b , NSString * c) = tuple ;
+        
         NSLog(@"RACTuple 元组包装: pack = %@ ",tuple);
         
         
