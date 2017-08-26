@@ -9,6 +9,7 @@
 #import "ViewController.h"
 
 #import <ReactiveObjC/ReactiveObjC.h>
+#import <ReactiveObjC/RACReturnSignal.h>
 
 @interface ViewController ()
 
@@ -20,8 +21,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    // Do any additional setup after loading the view, typically from a nib.
-    
+
 //    // 1.RACSignal 先订阅 再发送 (主线程中执行)
 //    self.RACSignalDome();
     
@@ -50,9 +50,11 @@
 //    // 9. RAC UITextField 监听 text 变化(主线程)
 //    self.RAC_UITextField_Dome();
     
+//    // 10、RAC KVO 监听属性内容变化
+//    self.RAC_KVO_Dome();
     
-    //RAC KVO 监听属性内容变化
-    self.RAC_KVO_Dome();
+    // 11、RACSignal 的 bind 绑定方法
+    self.RACSignalBind();
 }
 
 
@@ -333,10 +335,6 @@
         // 订阅最新发出来信号的 signal (7)
         [command.executionSignals.switchToLatest subscribeNext:^(id  _Nullable x) {
             
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                NSLog(@"执行最近的 tmp signal , x = %@ , thread = %@",x,[NSThread currentThread]);
-            });
-            
             NSLog(@"执行最近的 signal , x = %@ , thread = %@",x,[NSThread currentThread]);
         }];
 
@@ -455,7 +453,7 @@
 
 
 /**
-    RAC KVO 监听属性内容变化
+    10、RAC KVO 监听属性内容变化
  */
 -(void(^)(void))RAC_KVO_Dome
 {
@@ -471,6 +469,35 @@
 {
     self.age++ ;
 }
+
+
+/**
+    11、RACSignal 的 bind 绑定方法
+ */
+-(void(^)(void))RACSignalBind
+{
+    return ^{
+    
+        UITextField * textField = [[UITextField alloc] init];
+        
+        [[textField.rac_textSignal bind:^RACSignalBindBlock _Nonnull{
+           
+            NSLog(@"bind block");
+            
+            return ^RACSignal * (id _Nullable value, BOOL *stop){
+              
+                NSLog(@"return block value = %@ can do somthing",value);
+                
+                return [RACReturnSignal return:value];
+            };
+            
+        }] subscribeNext:^(id  _Nullable x) {
+            NSLog(@"signal subscribeNext x = %@",x);
+        }];
+    };
+}
+
+
 
 
 @end
