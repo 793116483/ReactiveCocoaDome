@@ -75,8 +75,12 @@
 //    // 16、RACSignal 的 map 拦截信号发出的信号和处理数据
 //    self.RACSignalMapDome();
     
-    // 17、信号中的信号，RACSignal 的 flattenMap 对象方法，用来接收信号对象value 和 信号对象value发出的信息
+//    // 17、信号中的信号，RACSignal 的 flattenMap 对象方法，用来接收信号对象value 和 信号对象value发出的信息
 //    self.RACSignalFlattenMapDome();
+    
+    
+    //18、信号过滤器：RACSignal 的 filter: 方法，用来设置一个条件发出的信号才会被接收到
+    self.RACSignalFilterDome();
     
 }
 
@@ -743,5 +747,35 @@
         [subject sendNext:@" subject 发出信号了"];
     };
 }
+
+
+/**
+    18、信号过滤器：RACSignal 的 filter: 方法，用来设置一个条件发出的信号才会被接收到
+ */
+-(void(^)(void))RACSignalFilterDome
+{
+    return ^{
+    
+        RACReplaySubject * replaySubject = [RACReplaySubject replaySubjectWithCapacity:1];
+        
+        // filter block 是一个过滤器，只有满足条件发出的信号才会被接收到
+        [[replaySubject filter:^BOOL(id  _Nullable value) {
+            
+            return ((NSString *)value).length >= 6 ;
+            
+        }] subscribeNext:^(id  _Nullable x) {
+            
+            NSLog(@"接收到信号 = %@",x);
+        }];
+        
+//        // 发出的信号长度为 5 时，订阅收不到信号信息
+//        [replaySubject sendNext:@"12345"];
+        
+        // 发出的信号长度为 >= 6 时，订阅收到信号了信息
+        [replaySubject sendNext:@"123456"];
+        
+    };
+}
+
 
 @end
