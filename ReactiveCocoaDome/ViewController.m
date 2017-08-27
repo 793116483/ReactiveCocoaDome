@@ -69,8 +69,15 @@
 //    // 14、使用 zipWith: 对象方法 压缩两个及以上 RACSignal 或 RACSignal 的子类对象。注意：( 1.所有 的被压缩对象 一起发送信号 才能收到; 2.解析时需要一层一层的解析 )
 //    self.RACSignalZipWithDome();
     
-    // 15、合并两个及以上 RACSignal 或 RACSignal 的子类对象，用新创建的 RACSignal 对象 同时接收多个 RACSignal 或 RACSignal 的子类对象 发出的信号 (任意一个 被合并的对象 发送的信号 都能收到)（注意：解析时需要一层一层的解析）
-    self.RACSignalCombineLatestWithDome();
+//    // 15、合并两个及以上 RACSignal 或 RACSignal 的子类对象，用新创建的 RACSignal 对象 同时接收多个 RACSignal 或 RACSignal 的子类对象 发出的信号 (任意一个 被合并的对象 发送的信号 都能收到)（注意：解析时需要一层一层的解析）
+//    self.RACSignalCombineLatestWithDome();
+    
+//    // 16、RACSignal 的 map 拦截信号发出的信号和处理数据
+//    self.RACSignalMapDome();
+    
+    // 17、信号中的信号，RACSignal 的 flattenMap 对象方法，用来接收信号对象value 和 信号对象value发出的信息
+    self.RACSignalFlattenMapDome();
+    
 }
 
 
@@ -660,6 +667,7 @@
         
         // 2.也可以把那些信号传的参数聚合成一个值
         //   遵守 NSFastEnumeration 协议的类都可成为数组
+        //   reduce block 参数可以自己根据信号设置
         [[RACSignal combineLatest:@[subjectB,subjectA,subjectC] reduce:^id (NSString * signalA,NSString * signalB,NSString * signalC){
             
             // 把这 三个中任意 一个发出的信号值 聚合成一个值 NSString 类型
@@ -672,5 +680,54 @@
     };
 }
 
+
+/**
+    16、RACSignal 的 map 拦截信号发出的信号和处理数据
+ */
+-(void(^)(void))RACSignalMapDome
+{
+    return ^{
+    
+        RACReplaySubject * signal = [RACReplaySubject subject];
+        
+        [[signal map:^id _Nullable(id  _Nullable value) {
+            return [NSString stringWithFormat:@"%@ (拦截发出的信号，拼接个想要的东西)",value];
+        }] subscribeNext:^(id  _Nullable x) {
+            NSLog(@"接收到处理后的信息 = %@",x);
+        }];
+        
+        [signal sendNext:@"@(当前信号的信息)"];
+
+    };
+}
+
+
+/**
+    17、信号中的信号，RACSignal 的 flattenMap 对象方法，用来接收信号对象value 和 信号对象value发出的信息
+ */
+-(void(^)(void))RACSignalFlattenMapDome
+{
+    return ^{
+    
+        RACReplaySubject * signal = [RACReplaySubject subject];
+        RACSubject * subject = [RACSubject subject];
+        
+        [[signal flattenMap:^__kindof RACSignal * _Nullable(id  _Nullable value) {
+            
+            // value 是信号对象 == subject
+            
+            return [value map:^id _Nullable(id  _Nullable value) {
+                
+                return [NSString stringWithFormat:@"(添加拦截信号处理信号) (%@)",value];
+            }];
+        }] subscribeNext:^(id  _Nullable x) {
+            NSLog(@"接收到处理后的信息 = %@",x);
+        }];
+        
+        [signal sendNext:subject];
+        
+        [subject sendNext:@" subject 发出信号了"];
+    };
+}
 
 @end
