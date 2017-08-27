@@ -78,9 +78,11 @@
 //    // 17、信号中的信号，RACSignal 的 flattenMap 对象方法，用来接收信号对象value 和 信号对象value发出的信息
 //    self.RACSignalFlattenMapDome();
     
+//    // 18、信号过滤器：RACSignal 的 filter: 方法，用来设置一个条件发出的信号才会被接收到
+//    self.RACSignalFilterDome();
     
-    //18、信号过滤器：RACSignal 的 filter: 方法，用来设置一个条件发出的信号才会被接收到
-    self.RACSignalFilterDome();
+//    // 19、RACSignal 信号对象 与 定时器的关系(可以设置多线程)
+//    self.RACSignalAndTimerDome();
     
 }
 
@@ -777,5 +779,63 @@
     };
 }
 
+
+/**
+    19、RACSignal 信号对象 与 定时器的关系
+ */
+-(void(^)(void))RACSignalAndTimerDome
+{
+    return ^{
+    
+        // 1、定时器
+        // TimeInterval : 间隔时间，秒
+        // repeats      : 是否重复
+        // blokc        : 调用代码块 (在主线程中执行)
+        [NSTimer scheduledTimerWithTimeInterval:1 repeats:NO block:^(NSTimer * _Nonnull timer) {
+            NSLog(@"每隔一秒调用一次当前 block ， thread = %@",[NSThread currentThread]);
+        }];
+        
+        
+        
+        // 2、RACSignal 制定定时器
+        // interval : 间隔的时间，秒
+        /**
+            onScheduler : 多线程 , 队列
+                mainThreadScheduler : 主线程中 执行订阅代码块
+                currentScheduler    : 在当前创建时的线程中 执行订阅代码块
+         */
+        /**
+            schedulerWithPriority: 或 schedulerWithPriority:name: 优先级 , name 表示线程名
+                // 优先级高，开起 新的线程
+                RACSchedulerPriorityHigh        = DISPATCH_QUEUE_PRIORITY_HIGH,
+                // 默认优先级，开起 新的线程
+                RACSchedulerPriorityDefault     = DISPATCH_QUEUE_PRIORITY_DEFAULT,
+                // 优先级低，开起 新的线程
+                RACSchedulerPriorityLow         = DISPATCH_QUEUE_PRIORITY_LOW,
+                // app 进入后台也可以调用，开起 新的线程
+                RACSchedulerPriorityBackground  = DISPATCH_QUEUE_PRIORITY_BACKGROUND,
+         */
+        
+//        [[RACReplaySubject interval:1 onScheduler:[RACScheduler schedulerWithPriority:RACSchedulerPriorityLow]] subscribeNext:^(NSDate * _Nullable x) {
+//            // x 是当前的时间
+//            NSLog(@"每隔一秒调用订阅代码：x = %@ , 在线程 thread = %@",x,[NSThread currentThread]);
+//        }];
+        
+        
+        
+        // 3、使用 RACSignal 信号 延时
+        [[[RACReplaySubject createSignal:^RACDisposable * _Nullable(id<RACSubscriber>  _Nonnull subscriber) {
+           
+            [subscriber sendNext:@"2秒后调用订阅 block"];
+            
+            return nil ;
+        }] delay:5] // 延时 5秒 再
+         subscribeNext:^(id  _Nullable x) {
+           
+             NSLog(@"%@",x);
+        }];
+        
+    };
+}
 
 @end
