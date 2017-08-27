@@ -76,7 +76,7 @@
 //    self.RACSignalMapDome();
     
     // 17、信号中的信号，RACSignal 的 flattenMap 对象方法，用来接收信号对象value 和 信号对象value发出的信息
-    self.RACSignalFlattenMapDome();
+//    self.RACSignalFlattenMapDome();
     
 }
 
@@ -677,6 +677,20 @@
         }] subscribeNext:^(id  _Nullable x) {
             NSLog(@"聚合后三个值变成一个 NSString 类型的值： %@",x);
         }];
+        
+        
+        // 3.也可以用聚合绑定做法
+        UILabel * lable = [[UILabel alloc] init];
+        
+        RAC(lable , text) = [RACSignal combineLatest:@[subjectB,subjectA,subjectC] reduce:^id (NSString * signalA,NSString * signalB,NSString * signalC){
+            
+            // 把这 三个中任意 一个发出的信号值 聚合成一个值 NSString 类型
+            
+            return [NSString stringWithFormat:@"A = %@ , B = %@ , C = %@",signalA , signalB , signalC];
+            
+        }];
+        
+        NSLog(@"lable.text = %@",lable.text);
     };
 }
 
